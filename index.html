@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marcador Pro - Game Show</title>
+    <title>La Runa - Playhit 2026/title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap');
@@ -60,7 +60,6 @@
             width: 100%; outline: none; cursor: pointer;
         }
 
-        /* Animación de urgencia para el temporizador */
         .timer-urgent {
             color: #ef4444 !important;
             animation: urgent-blink 0.5s infinite alternate;
@@ -71,12 +70,16 @@
             to { opacity: 0.7; transform: scale(1.05); }
         }
 
+        .preset-btn {
+            @apply px-4 py-1 text-xs font-bold rounded-full bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 text-amber-500 transition active:scale-95;
+        }
+
         iframe { background: #000; }
     </style>
 </head>
 <body class="p-4">
 
-    <!-- OVERLAY DE TU PRESENTACIÓN GOOGLE SLIDES -->
+    <!-- OVERLAY DE LA PRESENTACIÓN GOOGLE SLIDES -->
     <div id="slidesOverlay" class="fixed inset-0 bg-black overlay-hidden flex flex-col">
         <div class="p-3 glass-panel flex justify-between items-center border-b border-white/10">
             <div class="flex items-center gap-4">
@@ -103,28 +106,27 @@
     <div id="mainContainer" class="w-full max-w-6xl flex flex-col gap-6">
         
         <div class="grid grid-cols-3 items-center gap-4">
-            <div class="glass-panel p-4 rounded-2xl flex flex-col items-center border-l-4 border-amber-500">
-                <span class="text-xs uppercase tracking-widest text-gray-400 mb-1">Configuración</span>
-                <select id="roundSelector" class="bg-transparent text-xl font-bold focus:outline-none cursor-pointer" onchange="updateTimerByRound()">
-                    <option value="1" class="bg-slate-900">RONDA 1 (1:00)</option>
-                    <option value="2" class="bg-slate-900">RONDA 2 (0:00)</option>
-                    <option value="3" class="bg-slate-900">RONDA 3 (0:30)</option>
-                    <option value="4" class="bg-slate-900">RONDA 4 (0:00)</option>
-                    <option value="lightning" class="bg-red-900 text-white font-black">RONDA RELÁMPAGO (1:00)</option>
-                </select>
-            </div>
+            <div></div>
 
             <!-- Temporizador Central -->
             <div id="timerContainer" class="glass-panel p-6 rounded-3xl flex flex-col items-center border-2 border-amber-500/30">
-                <div id="timerWrapper" class="digital-font text-6xl font-bold text-amber-400 mb-2 transition-colors duration-300">
-                    <input type="text" id="timerDisplay" class="timer-input" value="01:00" maxlength="5">
+                <!-- Selectores de tiempo directo -->
+                <div class="flex gap-3 mb-4">
+                    <button onclick="setTimerPreset(30)" class="preset-btn">30 SEG</button>
+                    <button onclick="setTimerPreset(60)" class="preset-btn">1 MINUTO</button>
                 </div>
+
+                <div id="timerWrapper" class="digital-font text-6xl font-bold text-amber-400 mb-6 transition-colors duration-300">
+                    <input type="text" id="timerDisplay" class="timer-input" value="01:00" maxlength="5" readonly>
+                </div>
+
                 <div class="flex gap-4">
-                    <button id="timerToggle" class="bg-amber-500 hover:bg-amber-400 text-slate-900 px-6 py-1 rounded-full font-bold text-sm transition" onclick="toggleTimer()">INICIAR</button>
-                    <button id="timerReset" class="border border-gray-500 hover:bg-white/10 px-6 py-1 rounded-full font-bold text-sm transition" onclick="resetTimer()">RESET</button>
+                    <button id="timerToggle" class="bg-amber-500 hover:bg-amber-400 text-slate-900 px-8 py-2 rounded-full font-bold text-sm transition shadow-lg" onclick="toggleTimer()">INICIAR</button>
+                    <button id="timerReset" class="border border-gray-500 hover:bg-white/10 px-8 py-2 rounded-full font-bold text-sm transition" onclick="resetTimer()">RESET</button>
                 </div>
             </div>
 
+            <!-- Acceso a Diapositivas -->
             <div class="flex justify-end pr-4">
                 <button onclick="toggleSlides()" class="glass-panel p-4 rounded-2xl hover:bg-amber-500/10 transition group flex flex-col items-center border border-amber-500/20">
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500 group-hover:scale-110 transition"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
@@ -133,7 +135,9 @@
             </div>
         </div>
 
+        <!-- Área de Competencia -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Equipo A -->
             <div id="teamAContainer" class="score-card glass-panel rounded-[2.5rem] p-8 flex flex-col items-center relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-full h-3 bg-blue-500"></div>
                 <input type="text" value="EQUIPO A" class="bg-transparent text-4xl font-bold text-center w-full focus:outline-none mb-6 uppercase tracking-tighter">
@@ -144,6 +148,7 @@
                 </div>
             </div>
 
+            <!-- Equipo B -->
             <div id="teamBContainer" class="score-card glass-panel rounded-[2.5rem] p-8 flex flex-col items-center relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-full h-3 bg-pink-500"></div>
                 <input type="text" value="EQUIPO B" class="bg-transparent text-4xl font-bold text-center w-full focus:outline-none mb-6 uppercase tracking-tighter">
@@ -157,25 +162,29 @@
     </div>
 
     <script>
+        // Estado global
+        const INITIAL_DEFAULT = 60;
         const gameState = {
             scores: { A: 0, B: 0 },
             timer: { 
-                seconds: 60, 
+                seconds: INITIAL_DEFAULT, 
                 isRunning: false, 
                 interval: null, 
-                lastSetTime: 60,
-                tickPhase: 0 // Usado para el tic de doble velocidad
+                lastSetTime: INITIAL_DEFAULT,
+                tickPhase: 0 
             }
         };
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
+        // Control de la capa de presentación
         function toggleSlides() {
             const overlay = document.getElementById('slidesOverlay');
             overlay.classList.toggle('overlay-hidden');
             overlay.classList.toggle('overlay-visible');
         }
 
+        // Actualización de puntuaciones
         function updateScore(team, points) {
             const newScore = gameState.scores[team] + points;
             if (newScore < 0) return;
@@ -194,20 +203,17 @@
             }
         }
 
-        function updateTimerByRound() {
-            const round = document.getElementById('roundSelector').value;
-            let seconds = 0; 
-            if (round === "1" || round === "lightning") seconds = 60;
-            else if (round === "3") seconds = 30;
-            else if (round === "2" || round === "4") seconds = 0;
+        // Configurar tiempo preestablecido
+        function setTimerPreset(seconds) {
+            gameState.timer.lastSetTime = seconds;
             resetTimerLogic(seconds);
         }
 
+        // Lógica de reinicio del temporizador
         function resetTimerLogic(s) {
             clearInterval(gameState.timer.interval);
             gameState.timer.isRunning = false;
             gameState.timer.seconds = s;
-            gameState.timer.lastSetTime = s;
             gameState.timer.tickPhase = 0;
             const display = document.getElementById('timerDisplay');
             const wrapper = document.getElementById('timerWrapper');
@@ -216,9 +222,7 @@
             document.getElementById('timerToggle').innerText = 'INICIAR';
         }
 
-        /**
-         * Lógica del bucle del temporizador con detección de urgencia.
-         */
+        // Inicio/Pausa del temporizador
         function toggleTimer() {
             const btn = document.getElementById('timerToggle');
             const wrapper = document.getElementById('timerWrapper');
@@ -229,16 +233,13 @@
             } else {
                 if (gameState.timer.seconds <= 0) return;
 
-                // Usamos un intervalo de 500ms para permitir el doble tick en la fase final
                 gameState.timer.interval = setInterval(() => {
                     const isUrgent = gameState.timer.seconds <= 10;
                     
                     if (isUrgent) {
                         wrapper.classList.add('timer-urgent');
-                        // Tic acuciante (cada 500ms)
-                        playTick(true); 
+                        playTick(true); // Tic rápido
                         
-                        // Solo restamos el segundo real cada dos tics (fase 0 y 1)
                         if (gameState.timer.tickPhase === 1) {
                             decrementSeconds();
                             gameState.timer.tickPhase = 0;
@@ -246,10 +247,9 @@
                             gameState.timer.tickPhase = 1;
                         }
                     } else {
-                        // Modo normal: solo suena y decrementa cada 1000ms (dos ciclos de 500ms)
                         wrapper.classList.remove('timer-urgent');
                         if (gameState.timer.tickPhase === 1) {
-                            playTick(false);
+                            playTick(false); // Tic normal
                             decrementSeconds();
                             gameState.timer.tickPhase = 0;
                         } else {
@@ -281,20 +281,21 @@
             gameState.timer.isRunning = false;
         }
 
-        function resetTimer() { resetTimerLogic(gameState.timer.lastSetTime); }
-        function formatSeconds(s) { return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`; }
+        function resetTimer() { 
+            resetTimerLogic(gameState.timer.lastSetTime); 
+        }
+        
+        function formatSeconds(s) { 
+            return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`; 
+        }
 
-        /**
-         * Genera el sonido del Tic.
-         * @param {boolean} urgent - Si es true, el tono es más agudo y corto.
-         */
+        // Lógica de Audio (Web Audio API)
         function playTick(urgent) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.connect(gain); gain.connect(audioCtx.destination);
             
-            // Frecuencia: 800Hz normal, 1400Hz cuando hay prisa
             osc.frequency.setValueAtTime(urgent ? 1400 : 800, audioCtx.currentTime);
             gain.gain.setValueAtTime(urgent ? 0.02 : 0.01, audioCtx.currentTime);
             
