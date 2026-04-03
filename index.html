@@ -195,14 +195,24 @@
         const timerDisplay = document.getElementById('timerDisplay');
 
         // --- Spotify Core ---
-        function toggleSpotifyModal() { document.getElementById('spotifyConfigModal').classList.toggle('hidden'); }
+        function toggleSpotifyModal() { 
+            document.getElementById('spotifyConfigModal').classList.toggle('hidden'); 
+        }
 
+        /**
+         * Autentica con Spotify. 
+         * Detecta automáticamente la URL actual para el Redirect URI.
+         */
         function authenticateSpotify() {
             const scope = 'user-modify-playback-state user-read-playback-state';
+            // Construimos el redirectUri basado en la ubicación actual (local o GitHub Pages)
             const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname);
             window.location.href = `https://accounts.spotify.com/authorize?client_id=${gameState.spotify.clientId}&response_type=token&redirect_uri=${redirectUri}&scope=${encodeURIComponent(scope)}`;
         }
 
+        /**
+         * Obtiene la lista de dispositivos disponibles.
+         */
         async function fetchDevices() {
             if (!gameState.spotify.accessToken) return;
             try {
@@ -210,39 +220,45 @@
                     headers: { 'Authorization': `Bearer ${gameState.spotify.accessToken}` }
                 });
                 const data = await response.json();
-                const select = document.getElementById('spotifyDeviceList');
-                select.innerHTML = '';
+                const selectList = document.getElementById('spotifyDeviceList');
+                selectList.innerHTML = '';
                 
                 if (data.devices && data.devices.length > 0) {
                     data.devices.forEach(device => {
-                        const opt = document.createElement('option');
-                        opt.value = device.id;
-                        opt.innerText = `${device.name} ${device.is_active ? '(Activo)' : ''}`;
+                        const option = document.createElement('option');
+                        option.value = device.id;
+                        option.innerText = `${device.name} ${device.is_active ? '(Activo)' : ''}`;
                         if (device.is_active) {
-                            opt.selected = true;
+                            option.selected = true;
                             gameState.spotify.deviceId = device.id;
                         }
-                        select.appendChild(opt);
+                        selectList.appendChild(option);
                     });
                 } else {
-                    select.innerHTML = '<option value="">Abre Spotify en algún equipo</option>';
+                    selectList.innerHTML = '<option value="">Abre Spotify en algún equipo</option>';
                 }
-            } catch (e) { console.error("Error fetching devices", e); }
+            } catch (error) { 
+                console.error("Error fetching devices", error); 
+            }
         }
 
-        document.getElementById('spotifyDeviceList').addEventListener('change', (e) => {
-            gameState.spotify.deviceId = e.target.value;
+        // Listener para cambio de dispositivo manual en el select
+        document.getElementById('spotifyDeviceList').addEventListener('change', (event) => {
+            gameState.spotify.deviceId = event.target.value;
         });
 
+        /**
+         * Salta a la siguiente canción.
+         */
         async function skipToNextTrack() {
             if (!gameState.spotify.isActive || !gameState.spotify.accessToken) return;
             
-            const url = gameState.spotify.deviceId 
-                ? `https://api.spotify.com/v1/me/player/next?device_id=${gameState.spotify.deviceId}` 
-                : 'https://api.spotify.com/v1/me/player/next';
+            // Si tenemos un deviceId específico lo usamos, si no, Spotify intentará el activo por defecto
+            const baseUrl = 'https://api.spotify.com/v1/me/player/next';
+            const finalUrl = gameState.spotify.deviceId ? `${baseUrl}?device_id=${gameState.spotify.deviceId}` : baseUrl;
 
             try {
-                const response = await fetch(url, {
+                const response = await fetch(finalUrl, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${gameState.spotify.accessToken}` }
                 });
@@ -251,14 +267,17 @@
                     document.getElementById('spotifyStatusIcon').classList.remove('spotify-error');
                     console.log("Track skipped successfully");
                 } else if (response.status === 404) {
-                    // No hay reproductor activo
+                    // No se encontró un reproductor activo
                     document.getElementById('spotifyStatusIcon').classList.add('spotify-error');
+                    console.warn("No active player found");
                 } else if (response.status === 401) {
+                    // Token expirado o inválido
                     gameState.spotify.isActive = false;
                     document.getElementById('spotifyStatusIcon').classList.remove('spotify-active');
+                    console.error("Spotify token expired or unauthorized");
                 }
-            } catch (e) { 
-                console.error("Spotify skip error", e); 
+            } catch (error) { 
+                console.error("Spotify skip request failed", error); 
             }
         }
 
@@ -269,7 +288,7 @@
             gameState.scores[team] = newScore;
             document.getElementById(`score${team}`).innerText = newScore;
             
-            // Llamamos a Spotify con cada cambio de marcador
+            // Intentar saltar canción al actualizar marcador
             skipToNextTrack();
             
             const container = document.getElementById(`team${team}Container`);
@@ -284,10 +303,10 @@
             }
         }
 
-        // --- Timer Logic (Unchanged but validated) ---
-        function formatSeconds(s) {
-            const mins = Math.floor(s / 60).toString().padStart(2, '0');
-            const secs = (s % 60).toString().padStart(2, '0');
+        // --- Timer Logic ---
+        function formatSeconds(seconds) {
+            const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const secs = (seconds % 60).toString().padStart(2, '0');
             return `${mins}:${secs}`;
         }
 
@@ -297,8 +316,8 @@
             return parseInt(parts[0]) * 60 + parseInt(parts[1]);
         }
 
-        timerDisplay.addEventListener('change', (e) => {
-            const newSeconds = timeToSeconds(e.target.value);
+        timerDisplay.addEventListener('change', (event) => {
+            const newSeconds = timeToSeconds(event.target.value);
             if (!isNaN(newSeconds) && newSeconds >= 0) {
                 gameState.timer.seconds = newSeconds;
                 gameState.timer.lastSetTime = newSeconds;
@@ -307,9 +326,10 @@
         });
 
         function toggleTimer() {
+            const toggleButton = document.getElementById('timerToggle');
             if (gameState.timer.isRunning) {
                 clearInterval(gameState.timer.interval);
-                document.getElementById('timerToggle').innerText = 'REANUDAR';
+                toggleButton.innerText = 'REANUDAR';
             } else {
                 gameState.timer.interval = setInterval(() => {
                     if (gameState.timer.seconds > 0) {
@@ -319,11 +339,11 @@
                     } else {
                         clearInterval(gameState.timer.interval);
                         playSfx('horn');
-                        document.getElementById('timerToggle').innerText = 'TIEMPO!';
+                        toggleButton.innerText = 'TIEMPO!';
                         gameState.timer.isRunning = false;
                     }
                 }, 1000);
-                document.getElementById('timerToggle').innerText = 'PAUSAR';
+                toggleButton.innerText = 'PAUSAR';
             }
             gameState.timer.isRunning = !gameState.timer.isRunning;
         }
@@ -337,52 +357,60 @@
             document.getElementById('timerToggle').innerText = 'INICIAR';
         });
 
-        // --- SFX ---
+        // --- SFX (Sonidos generados por Web Audio API) ---
         function playSfx(type) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination);
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode); gainNode.connect(audioCtx.destination);
+            
             if (type === 'correct') {
-                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.2);
+                oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.2);
             } else if (type === 'incorrect') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(220, audioCtx.currentTime);
-                osc.frequency.linearRampToValueAtTime(110, audioCtx.currentTime + 0.3);
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(220, audioCtx.currentTime);
+                oscillator.frequency.linearRampToValueAtTime(110, audioCtx.currentTime + 0.3);
             } else if (type === 'horn') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(100, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                osc.start(); osc.stop(audioCtx.currentTime + 1); return;
+                oscillator.type = 'square';
+                oscillator.frequency.setValueAtTime(100, audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                oscillator.start(); oscillator.stop(audioCtx.currentTime + 1); return;
             }
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+            oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.3);
         }
 
         function playTick() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.01, audioCtx.currentTime);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode); gainNode.connect(audioCtx.destination);
+            oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.01, audioCtx.currentTime);
+            oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.05);
         }
 
-        // --- Init ---
-        (function init() {
-            const hash = window.location.hash.substring(1);
-            const params = new URLSearchParams(hash);
-            const token = params.get('access_token');
-            if (token) {
-                gameState.spotify.accessToken = token;
+        // --- Initialize App ---
+        (function initialize() {
+            // Manejo del token de Spotify tras el redireccionamiento
+            const hashParameters = new URLSearchParams(window.location.hash.substring(1));
+            const accessToken = hashParameters.get('access_token');
+            
+            if (accessToken) {
+                gameState.spotify.accessToken = accessToken;
                 gameState.spotify.isActive = true;
+                
+                // Actualizar interfaz
                 document.getElementById('spotifyStatusIcon').classList.add('spotify-active');
                 document.getElementById('spotifySetup').classList.add('hidden');
                 document.getElementById('deviceSelection').classList.remove('hidden');
-                window.location.hash = '';
+                
+                // Limpiar el hash de la URL para mayor limpieza
+                window.history.replaceState(null, null, window.location.pathname);
+                
                 fetchDevices();
             }
         })();
