@@ -12,7 +12,6 @@
             --bg-dark: #0f172a;
             --accent-gold: #fbbf24;
             --lightning-red: #ef4444;
-            --spotify-green: #1DB954;
         }
 
         body {
@@ -35,6 +34,7 @@
             border: 4px solid transparent;
         }
 
+        /* Animaciones para cambio de puntuación */
         .score-animate-up {
             animation: pulse-green 0.5s ease;
         }
@@ -76,81 +76,45 @@
             border-radius: 8px;
             color: white;
         }
-
-        .spotify-active {
-            color: var(--spotify-green);
-            filter: drop-shadow(0 0 8px var(--spotify-green));
-        }
-
-        .spotify-error {
-            color: var(--lightning-red);
-            animation: blink 0.5s infinite;
-        }
-
-        @keyframes blink {
-            50% { opacity: 0.5; }
-        }
     </style>
 </head>
 <body class="p-4">
 
-    <!-- Modal de Configuración Spotify -->
-    <div id="spotifyConfigModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-        <div class="glass-panel p-8 rounded-3xl w-96 flex flex-col gap-4 text-center">
-            <div class="flex justify-center mb-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.503 17.294c-.218.358-.684.474-1.042.256-2.884-1.764-6.516-2.164-10.793-1.185-.41.094-.823-.162-.916-.572-.094-.41.162-.823.572-.916 4.685-1.07 8.706-.615 11.923 1.353.358.218.474.684.256 1.042zm1.47-3.253c-.276.447-.852.588-1.299.313-3.3-2.028-8.328-2.617-12.23-1.433-.504.153-1.034-.136-1.187-.64-.153-.504.136-1.034.64-1.187 4.457-1.353 10-1.2 13.763 1.112.447.276.588.852.313 1.299zm.126-3.41c-3.957-2.35-10.485-2.566-14.283-1.413-.606.184-1.25-.17-1.434-.776-.184-.606.17-1.25.776-1.434 4.363-1.325 11.554-1.076 16.148 1.65.545.323.722 1.03.4 1.575-.323.544-1.03.722-1.575.4z"/></svg>
-            </div>
-            <h3 class="text-2xl font-bold">Spotify Control</h3>
-            
-            <div id="spotifySetup" class="flex flex-col gap-4">
-                <p class="text-sm text-gray-400">Vincula tu cuenta para cambiar canciones con el marcador.</p>
-                <button onclick="authenticateSpotify()" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-xl font-bold transition-all shadow-lg">VINCULAR CUENTA</button>
-            </div>
-
-            <div id="deviceSelection" class="hidden flex flex-col gap-4">
-                <p class="text-sm text-green-400 font-bold">¡Cuenta vinculada!</p>
-                <p class="text-xs text-gray-400">Selecciona un dispositivo activo:</p>
-                <select id="spotifyDeviceList" class="bg-slate-800 text-white p-2 rounded-lg text-sm border border-slate-700 outline-none focus:border-green-500">
-                    <option value="">Cargando dispositivos...</option>
-                </select>
-                <button onclick="fetchDevices()" class="text-xs text-blue-400 hover:underline">Actualizar lista</button>
-            </div>
-            
-            <button onclick="toggleSpotifyModal()" class="text-gray-500 hover:text-white text-xs uppercase tracking-widest mt-2 transition">Cerrar</button>
-        </div>
-    </div>
-
     <div id="mainContainer" class="w-full max-w-6xl flex flex-col gap-6">
-        <!-- Header -->
+        <!-- Cabecera y Temporizador -->
         <div class="grid grid-cols-3 items-center gap-4">
             <div class="glass-panel p-4 rounded-2xl flex flex-col items-center">
                 <span class="text-xs uppercase tracking-widest text-gray-400 mb-2">Ronda Actual</span>
-                <select id="roundSelector" class="bg-transparent text-xl font-bold border-b-2 border-amber-500 focus:outline-none cursor-pointer">
+                <select id="roundSelector" class="bg-transparent text-xl font-bold border-b-2 border-amber-500 focus:outline-none cursor-pointer" onchange="updateTimerByRound()">
                     <option value="1" class="bg-slate-900">RONDA 1</option>
                     <option value="2" class="bg-slate-900">RONDA 2</option>
-                    <option value="lightning" class="bg-red-900 text-red-500 font-black">RONDA RELÁMPAGO</option>
+                    <option value="3" class="bg-slate-900">RONDA 3</option>
+                    <option value="4" class="bg-slate-900">RONDA 4</option>
+                    <option value="lightning" class="bg-red-900 text-red-100 font-black">RONDA RELÁMPAGO</option>
                 </select>
             </div>
 
             <div id="timerContainer" class="glass-panel p-6 rounded-3xl flex flex-col items-center border-2 border-amber-500/30">
                 <div class="digital-font text-6xl font-bold text-amber-400 mb-2 flex items-center">
-                    <input type="text" id="timerDisplay" class="timer-input" value="02:00" maxlength="5">
+                    <input type="text" id="timerDisplay" class="timer-input" value="01:00" maxlength="5">
                 </div>
                 <div class="flex gap-4">
-                    <button id="timerToggle" class="bg-amber-500 hover:bg-amber-600 text-slate-900 px-4 py-1 rounded-full font-bold text-sm transition">INICIAR</button>
-                    <button id="timerReset" class="border border-gray-500 hover:bg-gray-500/20 px-4 py-1 rounded-full font-bold text-sm transition">RESET</button>
+                    <button id="timerToggle" class="bg-amber-500 hover:bg-amber-600 text-slate-900 px-4 py-1 rounded-full font-bold text-sm transition" onclick="toggleTimer()">INICIAR</button>
+                    <button id="timerReset" class="border border-gray-500 hover:bg-gray-500/20 px-4 py-1 rounded-full font-bold text-sm transition" onclick="resetTimer()">RESET</button>
                 </div>
             </div>
 
-            <div class="flex justify-end gap-3">
-                <button onclick="toggleSpotifyModal()" id="spotifyStatusIcon" class="p-2 text-gray-500 transition-all duration-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.503 17.294c-.218.358-.684.474-1.042.256-2.884-1.764-6.516-2.164-10.793-1.185-.41.094-.823-.162-.916-.572-.094-.41.162-.823.572-.916 4.685-1.07 8.706-.615 11.923 1.353.358.218.474.684.256 1.042zm1.47-3.253c-.276.447-.852.588-1.299.313-3.3-2.028-8.328-2.617-12.23-1.433-.504.153-1.034-.136-1.187-.64-.153-.504.136-1.034.64-1.187 4.457-1.353 10-1.2 13.763 1.112.447.276.588.852.313 1.299zm.126-3.41c-3.957-2.35-10.485-2.566-14.283-1.413-.606.184-1.25-.17-1.434-.776-.184-.606.17-1.25.776-1.434 4.363-1.325 11.554-1.076 16.148 1.65.545.323.722 1.03.4 1.575-.323.544-1.03.722-1.575.4z"/></svg>
-                </button>
+            <div class="flex justify-end pr-4">
+                <div class="text-right">
+                    <p class="text-[10px] text-gray-500 uppercase tracking-widest">Estado del Juego</p>
+                    <p id="gameStatus" class="text-xs font-bold text-green-500">LISTO</p>
+                </div>
             </div>
         </div>
 
-        <!-- Scores -->
+        <!-- Marcadores de Equipos -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Equipo A -->
             <div id="teamAContainer" class="score-card glass-panel rounded-[2.5rem] p-8 flex flex-col items-center relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-full h-3 bg-blue-500"></div>
                 <input type="text" value="EQUIPO ALFA" class="bg-transparent text-3xl font-bold text-center w-full focus:outline-none mb-4 uppercase">
@@ -161,6 +125,7 @@
                 </div>
             </div>
 
+            <!-- Equipo B -->
             <div id="teamBContainer" class="score-card glass-panel rounded-[2.5rem] p-8 flex flex-col items-center relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-full h-3 bg-pink-500"></div>
                 <input type="text" value="EQUIPO BETA" class="bg-transparent text-3xl font-bold text-center w-full focus:outline-none mb-4 uppercase">
@@ -174,122 +139,28 @@
     </div>
 
     <script>
-        // --- Game State ---
+        // --- Estado Global ---
         const gameState = {
             scores: { A: 0, B: 0 },
             timer: {
-                seconds: 120,
+                seconds: 60,
                 isRunning: false,
                 interval: null,
-                lastSetTime: 120
-            },
-            spotify: {
-                clientId: "cc7f41d925414179912ee48702ab56bf",
-                accessToken: null,
-                isActive: false,
-                deviceId: null
+                lastSetTime: 60
             }
         };
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const timerDisplay = document.getElementById('timerDisplay');
+        const statusText = document.getElementById('gameStatus');
 
-        // --- Spotify Core ---
-        function toggleSpotifyModal() { 
-            document.getElementById('spotifyConfigModal').classList.toggle('hidden'); 
-        }
-
-        /**
-         * Autentica con Spotify. 
-         * Detecta automáticamente la URL actual para el Redirect URI.
-         */
-        function authenticateSpotify() {
-            const scope = 'user-modify-playback-state user-read-playback-state';
-            // Construimos el redirectUri basado en la ubicación actual (local o GitHub Pages)
-            const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname);
-            window.location.href = `https://accounts.spotify.com/authorize?client_id=${gameState.spotify.clientId}&response_type=token&redirect_uri=${redirectUri}&scope=${encodeURIComponent(scope)}`;
-        }
-
-        /**
-         * Obtiene la lista de dispositivos disponibles.
-         */
-        async function fetchDevices() {
-            if (!gameState.spotify.accessToken) return;
-            try {
-                const response = await fetch('https://api.spotify.com/v1/me/player/devices', {
-                    headers: { 'Authorization': `Bearer ${gameState.spotify.accessToken}` }
-                });
-                const data = await response.json();
-                const selectList = document.getElementById('spotifyDeviceList');
-                selectList.innerHTML = '';
-                
-                if (data.devices && data.devices.length > 0) {
-                    data.devices.forEach(device => {
-                        const option = document.createElement('option');
-                        option.value = device.id;
-                        option.innerText = `${device.name} ${device.is_active ? '(Activo)' : ''}`;
-                        if (device.is_active) {
-                            option.selected = true;
-                            gameState.spotify.deviceId = device.id;
-                        }
-                        selectList.appendChild(option);
-                    });
-                } else {
-                    selectList.innerHTML = '<option value="">Abre Spotify en algún equipo</option>';
-                }
-            } catch (error) { 
-                console.error("Error fetching devices", error); 
-            }
-        }
-
-        // Listener para cambio de dispositivo manual en el select
-        document.getElementById('spotifyDeviceList').addEventListener('change', (event) => {
-            gameState.spotify.deviceId = event.target.value;
-        });
-
-        /**
-         * Salta a la siguiente canción.
-         */
-        async function skipToNextTrack() {
-            if (!gameState.spotify.isActive || !gameState.spotify.accessToken) return;
-            
-            // Si tenemos un deviceId específico lo usamos, si no, Spotify intentará el activo por defecto
-            const baseUrl = 'https://api.spotify.com/v1/me/player/next';
-            const finalUrl = gameState.spotify.deviceId ? `${baseUrl}?device_id=${gameState.spotify.deviceId}` : baseUrl;
-
-            try {
-                const response = await fetch(finalUrl, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${gameState.spotify.accessToken}` }
-                });
-
-                if (response.status === 204 || response.status === 200) {
-                    document.getElementById('spotifyStatusIcon').classList.remove('spotify-error');
-                    console.log("Track skipped successfully");
-                } else if (response.status === 404) {
-                    // No se encontró un reproductor activo
-                    document.getElementById('spotifyStatusIcon').classList.add('spotify-error');
-                    console.warn("No active player found");
-                } else if (response.status === 401) {
-                    // Token expirado o inválido
-                    gameState.spotify.isActive = false;
-                    document.getElementById('spotifyStatusIcon').classList.remove('spotify-active');
-                    console.error("Spotify token expired or unauthorized");
-                }
-            } catch (error) { 
-                console.error("Spotify skip request failed", error); 
-            }
-        }
-
-        // --- Score Logic ---
+        // --- Lógica de Puntuación ---
         function updateScore(team, points) {
             const newScore = gameState.scores[team] + points;
             if (newScore < 0) return;
+            
             gameState.scores[team] = newScore;
             document.getElementById(`score${team}`).innerText = newScore;
-            
-            // Intentar saltar canción al actualizar marcador
-            skipToNextTrack();
             
             const container = document.getElementById(`team${team}Container`);
             if (points > 0) {
@@ -303,7 +174,7 @@
             }
         }
 
-        // --- Timer Logic ---
+        // --- Lógica del Temporizador ---
         function formatSeconds(seconds) {
             const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
             const secs = (seconds % 60).toString().padStart(2, '0');
@@ -314,6 +185,31 @@
             const parts = timeStr.split(':');
             if (parts.length !== 2) return 0;
             return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+        }
+
+        /**
+         * Ajusta el tiempo según la ronda seleccionada.
+         */
+        function updateTimerByRound() {
+            const round = document.getElementById('roundSelector').value;
+            let seconds = 0; 
+            
+            if (round === "1" || round === "lightning") {
+                seconds = 60; // 1 min
+            } else if (round === "3") {
+                seconds = 30; // 30 seg
+            } else if (round === "2" || round === "4") {
+                seconds = 0; // Cero
+            }
+            
+            clearInterval(gameState.timer.interval);
+            gameState.timer.isRunning = false;
+            gameState.timer.seconds = seconds;
+            gameState.timer.lastSetTime = seconds;
+            timerDisplay.value = formatSeconds(seconds);
+            document.getElementById('timerToggle').innerText = 'INICIAR';
+            statusText.innerText = 'LISTO';
+            statusText.className = 'text-xs font-bold text-green-500';
         }
 
         timerDisplay.addEventListener('change', (event) => {
@@ -330,7 +226,14 @@
             if (gameState.timer.isRunning) {
                 clearInterval(gameState.timer.interval);
                 toggleButton.innerText = 'REANUDAR';
+                statusText.innerText = 'PAUSADO';
+                statusText.className = 'text-xs font-bold text-amber-500';
             } else {
+                if (gameState.timer.seconds <= 0) return;
+                
+                statusText.innerText = 'EN CURSO';
+                statusText.className = 'text-xs font-bold text-blue-500';
+                
                 gameState.timer.interval = setInterval(() => {
                     if (gameState.timer.seconds > 0) {
                         gameState.timer.seconds--;
@@ -340,6 +243,8 @@
                         clearInterval(gameState.timer.interval);
                         playSfx('horn');
                         toggleButton.innerText = 'TIEMPO!';
+                        statusText.innerText = 'FINALIZADO';
+                        statusText.className = 'text-xs font-bold text-red-500';
                         gameState.timer.isRunning = false;
                     }
                 }, 1000);
@@ -348,16 +253,17 @@
             gameState.timer.isRunning = !gameState.timer.isRunning;
         }
 
-        document.getElementById('timerToggle').addEventListener('click', toggleTimer);
-        document.getElementById('timerReset').addEventListener('click', () => {
+        function resetTimer() {
             clearInterval(gameState.timer.interval);
             gameState.timer.isRunning = false;
             gameState.timer.seconds = gameState.timer.lastSetTime;
             timerDisplay.value = formatSeconds(gameState.timer.seconds);
             document.getElementById('timerToggle').innerText = 'INICIAR';
-        });
+            statusText.innerText = 'LISTO';
+            statusText.className = 'text-xs font-bold text-green-500';
+        }
 
-        // --- SFX (Sonidos generados por Web Audio API) ---
+        // --- Generación de Sonidos (Web Audio API) ---
         function playSfx(type) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const oscillator = audioCtx.createOscillator();
@@ -392,28 +298,6 @@
             gainNode.gain.setValueAtTime(0.01, audioCtx.currentTime);
             oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.05);
         }
-
-        // --- Initialize App ---
-        (function initialize() {
-            // Manejo del token de Spotify tras el redireccionamiento
-            const hashParameters = new URLSearchParams(window.location.hash.substring(1));
-            const accessToken = hashParameters.get('access_token');
-            
-            if (accessToken) {
-                gameState.spotify.accessToken = accessToken;
-                gameState.spotify.isActive = true;
-                
-                // Actualizar interfaz
-                document.getElementById('spotifyStatusIcon').classList.add('spotify-active');
-                document.getElementById('spotifySetup').classList.add('hidden');
-                document.getElementById('deviceSelection').classList.remove('hidden');
-                
-                // Limpiar el hash de la URL para mayor limpieza
-                window.history.replaceState(null, null, window.location.pathname);
-                
-                fetchDevices();
-            }
-        })();
     </script>
 </body>
 </html>
